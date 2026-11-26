@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1 (2026-11-25)
+
+"Start with Windows" now reflects the real Windows startup entry, and Pothole puts that entry back whenever this PC uses it for DNS, so a restart never leaves the PC without DNS.
+
 ## 0.2.0 (2026-11-25)
 
 - New **Use on this PC** switch at the top: points this PC's own DNS (IPv4 and IPv6) at Pothole, and puts back what was there before when you untick it. Windows asks for permission each time. Turning it on also turns on "start with Windows", so the PC never ends up without DNS after a restart.

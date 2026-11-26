@@ -63,6 +63,10 @@ public partial class App : Application
         Server = new DnsServer(Filter, Stats);
         Server.SetUpstreams(Settings.Upstreams);
         Filter.Enabled = Settings.BlockingEnabled;
+        // The startup entry is the truth (it can be removed outside Pothole). If this PC relies on Pothole for DNS,
+        // it must come back after a restart, so put the entry back.
+        Settings.StartWithWindows = StartsWithWindows();
+        if (!TestMode && !Settings.StartWithWindows && PcDns.IsOn()) SetStartWithWindows(true);
         Filter.SetCustom(Settings.Allowed, Settings.Blocked);
         Log($"Pothole {typeof(App).Assembly.GetName().Version} started, data in {DataDir}");
 
@@ -132,6 +136,12 @@ public partial class App : Application
         Settings.BlockingEnabled = Filter.Enabled = on;
         SaveSettings();
         Changed?.Invoke();
+    }
+
+    static bool StartsWithWindows()
+    {
+        using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run");
+        return key?.GetValue("Pothole") != null;
     }
 
     public static void SetStartWithWindows(bool on)

@@ -117,7 +117,7 @@ public partial class MainWindow : Window
     {
         bool on = UsePcBox.IsChecked == true;
         if (on && !App.Server.Running) App.StartServer();
-        if (on && !App.Settings.StartWithWindows)
+        if (on)
         {
             // After a restart this PC would have no DNS at all unless Pothole comes back with it.
             App.SetStartWithWindows(true);
