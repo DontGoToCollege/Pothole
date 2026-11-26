@@ -128,29 +128,30 @@ public partial class MainWindow : Window
 
     void LogBlock_Click(object sender, RoutedEventArgs e)
     {
-        if (LogList.SelectedItem is QueryEntry q) AddCustom(App.Settings.Blocked, App.Settings.Allowed, q.Name, "block");
+        if (LogList.SelectedItem is QueryEntry q) _ = AddCustom(App.Settings.Blocked, App.Settings.Allowed, q.Name, "block");
     }
 
     void LogAllow_Click(object sender, RoutedEventArgs e)
     {
-        if (LogList.SelectedItem is QueryEntry q) AddCustom(App.Settings.Allowed, App.Settings.Blocked, q.Name, "allow");
+        if (LogList.SelectedItem is QueryEntry q) _ = AddCustom(App.Settings.Allowed, App.Settings.Blocked, q.Name, "allow");
     }
 
     // ---- Allow & block ----
     /// <summary>Adds a site to one list (removing it from the other) and applies it at once.</summary>
-    void AddCustom(List<string> to, List<string> other, string text, string verb)
+    bool AddCustom(List<string> to, List<string> other, string text, string verb)
     {
         var d = Filter.Clean(text);
         if (d == null)
         {
             MessageBox.Show(this, $"\"{text}\" doesn't look like a site name. Type something like example.com.", "Pothole");
-            return;
+            return false;
         }
         other.Remove(d);
         if (!to.Contains(d)) to.Add(d);
         to.Sort();
         ApplyCustom();
         App.Log($"User chose to {verb} {d}");
+        return true;
     }
 
     void ApplyCustom()
@@ -169,15 +170,13 @@ public partial class MainWindow : Window
     void AddAllowed_Click(object sender, RoutedEventArgs e)
     {
         if (AllowBox.Text.Trim().Length == 0) return;
-        AddCustom(App.Settings.Allowed, App.Settings.Blocked, AllowBox.Text, "allow");
-        AllowBox.Clear();
+        if (AddCustom(App.Settings.Allowed, App.Settings.Blocked, AllowBox.Text, "allow")) AllowBox.Clear();
     }
 
     void AddBlocked_Click(object sender, RoutedEventArgs e)
     {
         if (BlockBox.Text.Trim().Length == 0) return;
-        AddCustom(App.Settings.Blocked, App.Settings.Allowed, BlockBox.Text, "block");
-        BlockBox.Clear();
+        if (AddCustom(App.Settings.Blocked, App.Settings.Allowed, BlockBox.Text, "block")) BlockBox.Clear();
     }
 
     void AllowBox_KeyDown(object sender, KeyEventArgs e) { if (e.Key == Key.Enter) AddAllowed_Click(sender, e); }
