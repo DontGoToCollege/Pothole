@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2 (2026-11-25)
+
+The 24-hour chart on the dashboard is now a trend line (requests and blocked), with a dot on the current hour. Hovering an hour still shows its numbers.
+
 ## 0.2.1 (2026-11-25)
 
 "Start with Windows" now reflects the real Windows startup entry, and Pothole puts that entry back whenever this PC uses it for DNS, so a restart never leaves the PC without DNS.

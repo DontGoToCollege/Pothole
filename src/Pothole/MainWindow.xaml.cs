@@ -6,11 +6,12 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using System.Windows.Threading;
 
 namespace Pothole;
 
-public sealed record Bar(double Q, double B, string Label, string Tip);
+public sealed record ChartSlot(string Label, string Tip);
 
 public partial class MainWindow : Window
 {
@@ -84,9 +85,9 @@ public partial class MainWindow : Window
         ListText.Text = App.Filter.ListCount.ToString("N0");
         SinceText.Text = $"Counting since {d.Since:g}";
 
-        var hours = App.Stats.Last24Hours();
-        double max = Math.Max(1, hours.Max(h => h.Queries)), h = 128;
-        Chart.ItemsSource = hours.Select(x => new Bar(x.Queries / max * h, x.Blocked / max * h,
+        _hours = App.Stats.Last24Hours();
+        DrawChart();
+        Chart.ItemsSource = _hours.Select(x => new ChartSlot(
             x.Hour.Hour % 3 == 0 ? x.Hour.ToString("HH") : "",
             $"{x.Hour:HH}:00 to {x.Hour.AddHours(1):HH}:00\n{x.Queries:N0} requests, {x.Blocked:N0} blocked")).ToList();
         TopSites.ItemsSource = Stats.Top(d.Sites, 10);
@@ -94,6 +95,38 @@ public partial class MainWindow : Window
         TopDevices.ItemsSource = Stats.Top(d.Devices, 10);
 
         if (LogList.SelectedItem == null) RefreshLog();
+    }
+
+    (DateTime Hour, long Queries, long Blocked)[] _hours = [];
+
+    void ChartCanvas_SizeChanged(object sender, SizeChangedEventArgs e) => DrawChart();
+
+    /// <summary>Trend lines for requests and blocked per hour, each point centred over its hour label.</summary>
+    void DrawChart()
+    {
+        ChartCanvas.Children.Clear();
+        double w = ChartCanvas.ActualWidth, top = 8, h = ChartCanvas.ActualHeight - top;
+        if (w <= 0 || h <= 0 || _hours.Length == 0) return;
+        double max = Math.Max(1, _hours.Max(x => x.Queries)), step = w / _hours.Length;
+        PointCollection Line(Func<(DateTime Hour, long Queries, long Blocked), long> value) =>
+            new(_hours.Select((x, i) => new Point((i + 0.5) * step, top + h - value(x) / max * h)));
+        var requests = Line(x => x.Queries);
+        var blocked = Line(x => x.Blocked);
+        var area = requests.Clone();
+        area.Add(new Point(requests[^1].X, top + h));
+        area.Add(new Point(requests[0].X, top + h));
+        var accent = (SolidColorBrush)FindResource("Accent");
+        ChartCanvas.Children.Add(new Polygon { Points = area, Fill = new SolidColorBrush(accent.Color) { Opacity = 0.12 } });
+        ChartCanvas.Children.Add(new Polyline { Points = requests, Stroke = accent, StrokeThickness = 2.5, StrokeLineJoin = PenLineJoin.Round });
+        ChartCanvas.Children.Add(new Polyline { Points = blocked, Stroke = (Brush)FindResource("Bad"), StrokeThickness = 2, StrokeLineJoin = PenLineJoin.Round });
+        foreach (var (pts, brush) in new[] { (requests, (Brush)accent), (blocked, (Brush)FindResource("Bad")) })
+        {
+            // a dot on the current hour so "now" stands out
+            var dot = new Ellipse { Width = 7, Height = 7, Fill = brush };
+            Canvas.SetLeft(dot, pts[^1].X - 3.5);
+            Canvas.SetTop(dot, pts[^1].Y - 3.5);
+            ChartCanvas.Children.Add(dot);
+        }
     }
 
     void RefreshLog()

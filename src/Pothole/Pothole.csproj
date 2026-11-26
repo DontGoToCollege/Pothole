@@ -11,7 +11,7 @@
     <AssemblyName>Pothole</AssemblyName>
     <ApplicationIcon>Pothole.ico</ApplicationIcon>
     <LangVersion>latest</LangVersion>
-    <Version>0.2.1</Version>
+    <Version>0.2.2</Version>
     <Authors>DontGoToCollege</Authors>
     <Product>Pothole</Product>
     <Description>Simple ad-blocking DNS server for your home network</Description>

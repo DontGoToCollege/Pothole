@@ -44,11 +44,13 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         var args = e.Args.Select(a => a.ToLowerInvariant()).ToArray();
-        _single = new Mutex(true, "Pothole.SingleInstance", out bool first);
+        // A test copy gets its own names, so it never talks to (or hides behind) the copy the owner is running.
+        var id = args.Contains("--test") ? "Pothole.Test" : "Pothole";
+        _single = new Mutex(true, id + ".SingleInstance", out bool first);
         if (!first)
         {
             // Another copy is running: ask it to show itself (or exit) and leave.
-            var name = args.Contains("--exit") ? "Pothole.Exit" : "Pothole.Show";
+            var name = id + (args.Contains("--exit") ? ".Exit" : ".Show");
             if (EventWaitHandle.TryOpenExisting(name, out var h)) h.Set();
             Shutdown();
             return;
@@ -70,8 +72,8 @@ public partial class App : Application
         Filter.SetCustom(Settings.Allowed, Settings.Blocked);
         Log($"Pothole {typeof(App).Assembly.GetName().Version} started, data in {DataDir}");
 
-        ListenForSignal("Pothole.Show", ShowWindow);
-        ListenForSignal("Pothole.Exit", () => ExitApp(ask: false)); // scripted exit (updates) must not wait on a question
+        ListenForSignal(id + ".Show", ShowWindow);
+        ListenForSignal(id + ".Exit", () => ExitApp(ask: false)); // scripted exit (updates) must not wait on a question
         CreateTray();
 
         if (Settings.StartServerOnLaunch) StartServer();

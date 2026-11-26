@@ -66,26 +66,29 @@
                             <StackPanel>
                                 <DockPanel>
                                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                        <Rectangle Width="10" Height="10" Fill="#93C5FD" Margin="0,0,5,0"/><TextBlock Text="Requests" Foreground="{StaticResource Muted}" FontSize="12" Margin="0,0,14,0"/>
-                                        <Rectangle Width="10" Height="10" Fill="{StaticResource Bad}" Margin="0,0,5,0"/><TextBlock Text="Blocked" Foreground="{StaticResource Muted}" FontSize="12"/>
+                                        <Rectangle Width="14" Height="3" Fill="{StaticResource Accent}" Margin="0,0,5,0" VerticalAlignment="Center"/><TextBlock Text="Requests" Foreground="{StaticResource Muted}" FontSize="12" Margin="0,0,14,0"/>
+                                        <Rectangle Width="14" Height="3" Fill="{StaticResource Bad}" Margin="0,0,5,0" VerticalAlignment="Center"/><TextBlock Text="Blocked" Foreground="{StaticResource Muted}" FontSize="12"/>
                                     </StackPanel>
                                     <TextBlock Style="{StaticResource CardTitle}" Text="Last 24 hours"/>
                                 </DockPanel>
-                                <ItemsControl x:Name="Chart" Height="150" Margin="0,8,0,0">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate><UniformGrid Rows="1"/></ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Grid ToolTip="{Binding Tip}" Background="Transparent" Margin="2,0">
-                                                <Grid.RowDefinitions><RowDefinition/><RowDefinition Height="18"/></Grid.RowDefinitions>
-                                                <Rectangle VerticalAlignment="Bottom" Height="{Binding Q}" Fill="#93C5FD" RadiusX="2" RadiusY="2"/>
-                                                <Rectangle VerticalAlignment="Bottom" Height="{Binding B}" Fill="{StaticResource Bad}" RadiusX="2" RadiusY="2"/>
-                                                <TextBlock Grid.Row="1" Text="{Binding Label}" FontSize="10" Foreground="{StaticResource Muted}" HorizontalAlignment="Center" VerticalAlignment="Bottom"/>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+                                <Grid Height="150" Margin="0,8,0,0">
+                                    <Grid.RowDefinitions><RowDefinition/><RowDefinition Height="18"/></Grid.RowDefinitions>
+                                    <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1"/>
+                                    <Canvas x:Name="ChartCanvas" SizeChanged="ChartCanvas_SizeChanged"/>
+                                    <!-- one invisible column per hour: hour labels and the hover tooltip -->
+                                    <ItemsControl x:Name="Chart" Grid.RowSpan="2">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate><UniformGrid Rows="1"/></ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid ToolTip="{Binding Tip}" Background="Transparent">
+                                                    <TextBlock Text="{Binding Label}" FontSize="10" Foreground="{StaticResource Muted}" HorizontalAlignment="Center" VerticalAlignment="Bottom"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Grid>
                             </StackPanel>
                         </Border>
 
