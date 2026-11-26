@@ -1,0 +1,11 @@
+# Pothole: notes for Claude
+
+Ad-blocking forwarding DNS server for Windows with a WPF window and tray icon. Started 2026-11-25.
+
+- Target `net8.0-windows`, WPF + WinForms (tray icon only; WinForms/Drawing implicit usings removed in the csproj). Project in `src\Pothole`.
+- `.\publish.ps1` → self-contained single file `Pothole.exe` at the root plus `Versions\Archive\Pothole-<version>.exe`; refuses an archived version. Bump `<Version>` in the csproj first, then commit, push, `gh release create v<version> Pothole.exe`.
+- Data in `Pothole-Data\` next to the exe (settings.json, stats.json, lists\ cache, logs\). Env `POTHOLE_DATA=<dir>` overrides it: use a scratchpad folder for tests.
+- Engine: `DnsServer.cs` forwards raw packets to the upstreams (UDP, TCP for TCP clients), answers blocked A/AAAA with 0.0.0.0/:: and other types with an empty answer. `Filter.cs` matches a name and all its parents; Allowed beats everything. No cache, IPv4 listening only.
+- On this PC, Windows Internet Connection Sharing (SharedAccess) holds UDP 0.0.0.0:53, so Pothole falls back to binding 127.0.0.1 and each IPv4 address separately (that works).
+- **Background testing:** `Pothole.exe --exit` closes a running copy gracefully (saves stats). Start a test copy with env `POTHOLE_DATA=<scratch>` and `--test --tray`; a second plain launch shows the window off-screen without activating it. Query it with `Resolve-DnsName <name> -Server 127.0.0.1 -DnsOnly` (add `-TcpOnly` for TCP). Capture with `PrintWindow(hwnd, hdc, 2)`. Never switch tabs with UIA `SelectionItemPattern.Select`: on 2026-11-25 that activated the test window and took the owner's focus.
+- Icon `src\Pothole\Pothole.ico` was drawn once with System.Drawing (road square, pothole, red slash); redraw it the same way if it needs to change.

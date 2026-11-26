@@ -1,0 +1,265 @@
+<Window x:Class="Pothole.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Pothole" Width="1040" Height="740" MinWidth="760" MinHeight="520"
+        Icon="Pothole.ico" Background="{StaticResource Bg}" FontFamily="Segoe UI" FontSize="14"
+        Foreground="{StaticResource Text}" WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <DataTemplate x:Key="TopRow">
+            <DockPanel Margin="0,2">
+                <TextBlock DockPanel.Dock="Right" Text="{Binding Value, StringFormat=N0}" Foreground="{StaticResource Muted}" Margin="8,0,0,0"/>
+                <TextBlock Text="{Binding Key}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Key}"/>
+            </DockPanel>
+        </DataTemplate>
+    </Window.Resources>
+    <DockPanel>
+        <!-- Header: status and the one big button -->
+        <Border DockPanel.Dock="Top" Background="{StaticResource Card}" BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="22,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Image Source="Pothole.ico" Width="44" Height="44" Margin="0,0,14,0" VerticalAlignment="Top"/>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Pothole" FontSize="22" FontWeight="SemiBold"/>
+                        <Border x:Name="StatusPill" CornerRadius="10" Padding="10,2" Margin="12,4,0,0" VerticalAlignment="Center">
+                            <TextBlock x:Name="StatusText" Foreground="White" FontSize="12" FontWeight="SemiBold"/>
+                        </Border>
+                    </StackPanel>
+                    <TextBlock x:Name="StatusDetail" Style="{StaticResource Hint}" Margin="0,4,0,0"/>
+                </StackPanel>
+                <CheckBox x:Name="PauseBox" Grid.Column="2" Content="Pause blocking" VerticalAlignment="Center" Margin="0,0,18,0"
+                          ToolTip="Let everything through for a while without stopping the server" Click="PauseBox_Click"/>
+                <Button x:Name="StartStopButton" Grid.Column="3" Style="{StaticResource BigButton}" MinWidth="130" Click="StartStop_Click"/>
+            </Grid>
+        </Border>
+
+        <TabControl Margin="12" Background="Transparent" BorderThickness="0" x:Name="Tabs">
+            <!-- Dashboard -->
+            <TabItem Header="Dashboard">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,6,0,0">
+                        <UniformGrid Columns="4">
+                            <Border Style="{StaticResource CardBox}"><StackPanel>
+                                <TextBlock Style="{StaticResource CardTitle}" Text="Total requests"/>
+                                <TextBlock x:Name="TotalText" Style="{StaticResource Big}"/></StackPanel></Border>
+                            <Border Style="{StaticResource CardBox}"><StackPanel>
+                                <TextBlock Style="{StaticResource CardTitle}" Text="Blocked"/>
+                                <TextBlock x:Name="BlockedText" Style="{StaticResource Big}" Foreground="{StaticResource Bad}"/></StackPanel></Border>
+                            <Border Style="{StaticResource CardBox}"><StackPanel>
+                                <TextBlock Style="{StaticResource CardTitle}" Text="Share blocked"/>
+                                <TextBlock x:Name="PercentText" Style="{StaticResource Big}"/></StackPanel></Border>
+                            <Border Style="{StaticResource CardBox}"><StackPanel>
+                                <TextBlock Style="{StaticResource CardTitle}" Text="Sites on block lists"/>
+                                <TextBlock x:Name="ListText" Style="{StaticResource Big}"/></StackPanel></Border>
+                        </UniformGrid>
+
+                        <Border Style="{StaticResource CardBox}">
+                            <StackPanel>
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                        <Rectangle Width="10" Height="10" Fill="#93C5FD" Margin="0,0,5,0"/><TextBlock Text="Requests" Foreground="{StaticResource Muted}" FontSize="12" Margin="0,0,14,0"/>
+                                        <Rectangle Width="10" Height="10" Fill="{StaticResource Bad}" Margin="0,0,5,0"/><TextBlock Text="Blocked" Foreground="{StaticResource Muted}" FontSize="12"/>
+                                    </StackPanel>
+                                    <TextBlock Style="{StaticResource CardTitle}" Text="Last 24 hours"/>
+                                </DockPanel>
+                                <ItemsControl x:Name="Chart" Height="150" Margin="0,8,0,0">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate><UniformGrid Rows="1"/></ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid ToolTip="{Binding Tip}" Background="Transparent" Margin="2,0">
+                                                <Grid.RowDefinitions><RowDefinition/><RowDefinition Height="18"/></Grid.RowDefinitions>
+                                                <Rectangle VerticalAlignment="Bottom" Height="{Binding Q}" Fill="#93C5FD" RadiusX="2" RadiusY="2"/>
+                                                <Rectangle VerticalAlignment="Bottom" Height="{Binding B}" Fill="{StaticResource Bad}" RadiusX="2" RadiusY="2"/>
+                                                <TextBlock Grid.Row="1" Text="{Binding Label}" FontSize="10" Foreground="{StaticResource Muted}" HorizontalAlignment="Center" VerticalAlignment="Bottom"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <UniformGrid Columns="3">
+                            <Border Style="{StaticResource CardBox}"><StackPanel>
+                                <TextBlock Style="{StaticResource CardTitle}" Text="Most visited sites"/>
+                                <ItemsControl x:Name="TopSites" ItemTemplate="{StaticResource TopRow}"/></StackPanel></Border>
+                            <Border Style="{StaticResource CardBox}"><StackPanel>
+                                <TextBlock Style="{StaticResource CardTitle}" Text="Most blocked sites"/>
+                                <ItemsControl x:Name="TopBlocked" ItemTemplate="{StaticResource TopRow}"/></StackPanel></Border>
+                            <Border Style="{StaticResource CardBox}"><StackPanel>
+                                <TextBlock Style="{StaticResource CardTitle}" Text="Busiest devices"/>
+                                <ItemsControl x:Name="TopDevices" ItemTemplate="{StaticResource TopRow}"/></StackPanel></Border>
+                        </UniformGrid>
+                        <StackPanel Orientation="Horizontal" Margin="6,4,6,10">
+                            <TextBlock x:Name="SinceText" Foreground="{StaticResource Muted}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            <Button Content="Reset statistics" Click="ResetStats_Click"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Query log -->
+            <TabItem Header="Activity">
+                <Border Style="{StaticResource CardBox}">
+                    <DockPanel>
+                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <Button Content="Block this site" Click="LogBlock_Click"/>
+                                <Button Content="Always allow this site" Click="LogAllow_Click" Margin="0"/>
+                            </StackPanel>
+                            <TextBox x:Name="LogSearch" Width="240" TextChanged="LogFilter_Changed" ToolTip="Type part of a site or device address"/>
+                            <CheckBox x:Name="OnlyBlocked" Content="Only blocked" VerticalAlignment="Center" Margin="12,0" Click="LogFilter_Changed"/>
+                        </DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Hint}"
+                                   Text="Every site your devices looked up, newest first. The list stops updating while a row is selected; press Esc to resume."/>
+                        <ListView x:Name="LogList" KeyDown="LogList_KeyDown">
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Result}" Value="Blocked"><Setter Property="Foreground" Value="{StaticResource Bad}"/></DataTrigger>
+                                        <DataTrigger Binding="{Binding Result}" Value="Failed"><Setter Property="Foreground" Value="{StaticResource Warn}"/></DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn Header="Time" Width="80" DisplayMemberBinding="{Binding Time, StringFormat=HH:mm:ss}"/>
+                                    <GridViewColumn Header="Device" Width="120" DisplayMemberBinding="{Binding Client}"/>
+                                    <GridViewColumn Header="Site" Width="360" DisplayMemberBinding="{Binding Name}"/>
+                                    <GridViewColumn Header="Type" Width="60" DisplayMemberBinding="{Binding Type}"/>
+                                    <GridViewColumn Header="Result" Width="80" DisplayMemberBinding="{Binding Result}"/>
+                                    <GridViewColumn Header="Why" Width="130" DisplayMemberBinding="{Binding Reason}"/>
+                                    <GridViewColumn Header="ms" Width="50" DisplayMemberBinding="{Binding Ms}"/>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+                    </DockPanel>
+                </Border>
+            </TabItem>
+
+            <!-- Block lists -->
+            <TabItem Header="Block lists">
+                <Border Style="{StaticResource CardBox}">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Hint}"
+                                   Text="Block lists are collections of ad, tracker and malware sites kept up to date by volunteers. Tick the ones you want; Pothole downloads them and refreshes them once a day. More lists block more, but can occasionally break a site: if that happens, add it under Allow &amp; block."/>
+                        <Grid DockPanel.Dock="Bottom" Margin="0,10,0,0">
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition/></Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="180"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="List name" Foreground="{StaticResource Muted}" FontSize="12" Margin="0,0,0,3"/>
+                            <TextBlock Grid.Column="1" Text="Web address of another list to add (hosts file, plain list of sites, or Adblock list)" Foreground="{StaticResource Muted}" FontSize="12" Margin="0,0,0,3"/>
+                            <TextBox Grid.Row="1" x:Name="NewListName" Margin="0,0,8,0" ToolTip="A name for the list"/>
+                            <TextBox Grid.Row="1" x:Name="NewListUrl" Grid.Column="1" Margin="0,0,8,0" ToolTip="Web address of the list (hosts file, domain list or Adblock list)"/>
+                            <Button Grid.Row="1" Grid.Column="2" Content="Add list" Click="AddList_Click" Margin="0"/>
+                        </Grid>
+                        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button x:Name="UpdateListsButton" Content="Update lists now" Click="UpdateLists_Click"/>
+                            <Button Content="Remove selected list" Click="RemoveList_Click"/>
+                            <TextBlock x:Name="ListsStatus" Foreground="{StaticResource Muted}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <ListView x:Name="ListsView">
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn Header="On" Width="44">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate><CheckBox IsChecked="{Binding Enabled}" Click="ListEnabled_Click"/></DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Name" Width="220" DisplayMemberBinding="{Binding Name}"/>
+                                    <GridViewColumn Header="Sites" Width="90" DisplayMemberBinding="{Binding Count, StringFormat=N0}"/>
+                                    <GridViewColumn Header="Updated" Width="170" DisplayMemberBinding="{Binding Updated, StringFormat=g}"/>
+                                    <GridViewColumn Header="Address" Width="420" DisplayMemberBinding="{Binding Url}"/>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+                    </DockPanel>
+                </Border>
+            </TabItem>
+
+            <!-- Allow & block -->
+            <TabItem Header="Allow &amp; block">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource CardBox}">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Top" Text="Always allow" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                            <TextBlock DockPanel.Dock="Top" Style="{StaticResource Hint}" Text="These sites always work, even when a block list has them. Allowing a site also allows everything under it (allowing example.com allows www.example.com)."/>
+                            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                                <Button DockPanel.Dock="Right" Content="Add" Margin="0" Click="AddAllowed_Click"/>
+                                <TextBox x:Name="AllowBox" Margin="0,0,8,0" KeyDown="AllowBox_KeyDown"/>
+                            </DockPanel>
+                            <Button DockPanel.Dock="Bottom" Content="Remove selected" HorizontalAlignment="Left" Margin="0,8,0,0" Click="RemoveAllowed_Click"/>
+                            <ListBox x:Name="AllowedList" SelectionMode="Extended"/>
+                        </DockPanel>
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource CardBox}">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Top" Text="Always block" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                            <TextBlock DockPanel.Dock="Top" Style="{StaticResource Hint}" Text="Your own list of sites to block, on top of the block lists. Blocking a site also blocks everything under it."/>
+                            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                                <Button DockPanel.Dock="Right" Content="Add" Margin="0" Click="AddBlocked_Click"/>
+                                <TextBox x:Name="BlockBox" Margin="0,0,8,0" KeyDown="BlockBox_KeyDown"/>
+                            </DockPanel>
+                            <Button DockPanel.Dock="Bottom" Content="Remove selected" HorizontalAlignment="Left" Margin="0,8,0,0" Click="RemoveBlocked_Click"/>
+                            <ListBox x:Name="BlockedList" SelectionMode="Extended"/>
+                        </DockPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- Settings -->
+            <TabItem Header="Settings">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <Border Style="{StaticResource CardBox}">
+                            <StackPanel>
+                                <TextBlock Text="How to use Pothole" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                                <TextBlock x:Name="HowTo" TextWrapping="Wrap" LineHeight="22"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource CardBox}">
+                            <StackPanel>
+                                <TextBlock Text="Where Pothole looks up allowed sites" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <TextBlock Style="{StaticResource Hint}" Text="Pothole passes every request it doesn't block to these DNS servers. Pick a provider, or type your own addresses separated by commas."/>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <Button Content="Cloudflare" Tag="1.1.1.1, 1.0.0.1" Click="Preset_Click"/>
+                                    <Button Content="Google" Tag="8.8.8.8, 8.8.4.4" Click="Preset_Click"/>
+                                    <Button Content="Quad9 (blocks malware too)" Tag="9.9.9.9, 149.112.112.112" Click="Preset_Click"/>
+                                    <Button Content="Cloudflare for Families" Tag="1.1.1.3, 1.0.0.3" Click="Preset_Click"/>
+                                </StackPanel>
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Content="Save" Margin="0" Click="SaveUpstream_Click"/>
+                                    <TextBox x:Name="UpstreamBox" Margin="0,0,8,0"/>
+                                </DockPanel>
+                                <TextBlock x:Name="UpstreamStatus" Foreground="{StaticResource Muted}" Margin="0,6,0,0"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource CardBox}">
+                            <StackPanel>
+                                <TextBlock Text="Startup" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                <CheckBox x:Name="StartWithWindowsBox" Content="Start Pothole when I sign in to Windows (in the tray)" Margin="0,0,0,8" Click="Option_Click"/>
+                                <CheckBox x:Name="AutoStartBox" Content="Start the server as soon as Pothole opens" Margin="0,0,0,8" Click="Option_Click"/>
+                                <CheckBox x:Name="CloseToTrayBox" Content="Keep running in the tray when I close this window" Click="Option_Click"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource CardBox}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="AboutText" Foreground="{StaticResource Muted}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                <Button Content="Open data folder" Click="OpenData_Click"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+
+</Window>
