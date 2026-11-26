@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0 (2026-11-25)
+
+The dashboard chart can now show the last 60 minutes, 24 hours, 30 days, 12 months or 5 years: pick Minute, Hour, Day, Month or Year above the chart (Pothole remembers your choice). Daily counts are now kept for good so the month and year views fill in over time; counts from before this version carry over.
+
 ## 0.2.2 (2026-11-25)
 
 The 24-hour chart on the dashboard is now a trend line (requests and blocked), with a dot on the current hour. Hovering an hour still shows its numbers.

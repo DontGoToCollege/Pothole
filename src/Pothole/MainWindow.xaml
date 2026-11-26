@@ -69,7 +69,17 @@
                                         <Rectangle Width="14" Height="3" Fill="{StaticResource Accent}" Margin="0,0,5,0" VerticalAlignment="Center"/><TextBlock Text="Requests" Foreground="{StaticResource Muted}" FontSize="12" Margin="0,0,14,0"/>
                                         <Rectangle Width="14" Height="3" Fill="{StaticResource Bad}" Margin="0,0,5,0" VerticalAlignment="Center"/><TextBlock Text="Blocked" Foreground="{StaticResource Muted}" FontSize="12"/>
                                     </StackPanel>
-                                    <TextBlock Style="{StaticResource CardTitle}" Text="Last 24 hours"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock x:Name="ChartTitle" Style="{StaticResource CardTitle}" VerticalAlignment="Center" MinWidth="120"/>
+                                        <!-- each point on the chart is one minute, hour, day, month or year -->
+                                        <StackPanel x:Name="SpanButtons" Orientation="Horizontal" Margin="12,0,0,6">
+                                            <RadioButton Content="Minute" Tag="Minute" Style="{StaticResource SpanButton}" Click="Span_Click"/>
+                                            <RadioButton Content="Hour" Tag="Hour" Style="{StaticResource SpanButton}" Click="Span_Click"/>
+                                            <RadioButton Content="Day" Tag="Day" Style="{StaticResource SpanButton}" Click="Span_Click"/>
+                                            <RadioButton Content="Month" Tag="Month" Style="{StaticResource SpanButton}" Click="Span_Click"/>
+                                            <RadioButton Content="Year" Tag="Year" Style="{StaticResource SpanButton}" Click="Span_Click"/>
+                                        </StackPanel>
+                                    </StackPanel>
                                 </DockPanel>
                                 <Grid Height="150" Margin="0,8,0,0">
                                     <Grid.RowDefinitions><RowDefinition/><RowDefinition Height="18"/></Grid.RowDefinitions>
@@ -83,7 +93,7 @@
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <Grid ToolTip="{Binding Tip}" Background="Transparent">
-                                                    <TextBlock Text="{Binding Label}" FontSize="10" Foreground="{StaticResource Muted}" HorizontalAlignment="Center" VerticalAlignment="Bottom"/>
+                                                    <TextBlock Text="{Binding Label}" FontSize="10" Foreground="{StaticResource Muted}" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="-40,0"/>
                                                 </Grid>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>

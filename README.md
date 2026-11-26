@@ -22,7 +22,7 @@ If your router also hands out IPv6 DNS servers, some devices may use those and s
 
 ## What's in the window
 
-- **Dashboard**: how many requests went through, how many were blocked, a chart of the last 24 hours, and the most visited sites, most blocked sites and busiest devices.
+- **Dashboard**: how many requests went through, how many were blocked, a trend chart you can switch between the last 60 minutes, 24 hours, 30 days, 12 months and 5 years, and the most visited sites, most blocked sites and busiest devices.
 - **Activity**: every lookup as it happens. Select one and press **Block this site** or **Always allow this site**.
 - **Block lists**: ready-made lists of ad and tracker sites (StevenBlack, HaGeZi, OISD). Tick the ones you want, or add your own by web address. They update themselves once a day.
 - **Allow & block**: your own lists. *Always allow* wins over everything, so use it when a block list breaks a site you need. Rules cover subdomains too.

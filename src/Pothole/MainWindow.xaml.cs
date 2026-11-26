@@ -28,6 +28,7 @@ public partial class MainWindow : Window
         CloseToTrayBox.IsChecked = s.CloseToTray;
         AboutText.Text = $"Pothole {typeof(App).Assembly.GetName().Version?.ToString(3)}   ·   Data: {App.DataDir}";
         RefreshCustomLists();
+        foreach (RadioButton r in SpanButtons.Children) r.IsChecked = (string)r.Tag == s.ChartSpan.ToString();
 
         App.Changed += OnChanged;
         _timer.Tick += (_, _) => RefreshLive();
@@ -85,11 +86,32 @@ public partial class MainWindow : Window
         ListText.Text = App.Filter.ListCount.ToString("N0");
         SinceText.Text = $"Counting since {d.Since:g}";
 
-        _hours = App.Stats.Last24Hours();
+        var span = App.Settings.ChartSpan;
+        _series = App.Stats.Series(span);
         DrawChart();
-        Chart.ItemsSource = _hours.Select(x => new ChartSlot(
-            x.Hour.Hour % 3 == 0 ? x.Hour.ToString("HH") : "",
-            $"{x.Hour:HH}:00 to {x.Hour.AddHours(1):HH}:00\n{x.Queries:N0} requests, {x.Blocked:N0} blocked")).ToList();
+        ChartTitle.Text = span switch
+        {
+            ChartSpan.Minute => "Last 60 minutes", ChartSpan.Hour => "Last 24 hours", ChartSpan.Day => "Last 30 days",
+            ChartSpan.Month => "Last 12 months", _ => "Last 5 years",
+        };
+        // Labels on every few points so they don't crowd; the tooltip names each point in full.
+        Chart.ItemsSource = _series.Select((x, i) => new ChartSlot(
+            span switch
+            {
+                ChartSpan.Minute => x.Start.Minute % 10 == 0 ? x.Start.ToString("HH:mm") : "",
+                ChartSpan.Hour => x.Start.Hour % 3 == 0 ? x.Start.ToString("HH") : "",
+                ChartSpan.Day => (_series.Length - 1 - i) % 5 == 0 ? x.Start.ToString("MMM d") : "",
+                ChartSpan.Month => x.Start.ToString("MMM"),
+                _ => x.Start.ToString("yyyy"),
+            },
+            span switch
+            {
+                ChartSpan.Minute => x.Start.ToString("HH:mm"),
+                ChartSpan.Hour => $"{x.Start:HH}:00 to {x.Start.AddHours(1):HH}:00",
+                ChartSpan.Day => x.Start.ToString("dddd, MMMM d"),
+                ChartSpan.Month => x.Start.ToString("MMMM yyyy"),
+                _ => x.Start.ToString("yyyy"),
+            } + $"\n{x.Queries:N0} requests, {x.Blocked:N0} blocked")).ToList();
         TopSites.ItemsSource = Stats.Top(d.Sites, 10);
         TopBlocked.ItemsSource = Stats.Top(d.BlockedSites, 10);
         TopDevices.ItemsSource = Stats.Top(d.Devices, 10);
@@ -97,19 +119,26 @@ public partial class MainWindow : Window
         if (LogList.SelectedItem == null) RefreshLog();
     }
 
-    (DateTime Hour, long Queries, long Blocked)[] _hours = [];
+    (DateTime Start, long Queries, long Blocked)[] _series = [];
+
+    void Span_Click(object sender, RoutedEventArgs e)
+    {
+        App.Settings.ChartSpan = Enum.Parse<ChartSpan>((string)((FrameworkElement)sender).Tag);
+        App.SaveSettings();
+        RefreshLive();
+    }
 
     void ChartCanvas_SizeChanged(object sender, SizeChangedEventArgs e) => DrawChart();
 
-    /// <summary>Trend lines for requests and blocked per hour, each point centred over its hour label.</summary>
+    /// <summary>Trend lines for requests and blocked per minute/hour/day/month/year, each point centred over its hour label.</summary>
     void DrawChart()
     {
         ChartCanvas.Children.Clear();
         double w = ChartCanvas.ActualWidth, top = 8, h = ChartCanvas.ActualHeight - top;
-        if (w <= 0 || h <= 0 || _hours.Length == 0) return;
-        double max = Math.Max(1, _hours.Max(x => x.Queries)), step = w / _hours.Length;
-        PointCollection Line(Func<(DateTime Hour, long Queries, long Blocked), long> value) =>
-            new(_hours.Select((x, i) => new Point((i + 0.5) * step, top + h - value(x) / max * h)));
+        if (w <= 0 || h <= 0 || _series.Length == 0) return;
+        double max = Math.Max(1, _series.Max(x => x.Queries)), step = w / _series.Length;
+        PointCollection Line(Func<(DateTime Start, long Queries, long Blocked), long> value) =>
+            new(_series.Select((x, i) => new Point((i + 0.5) * step, top + h - value(x) / max * h)));
         var requests = Line(x => x.Queries);
         var blocked = Line(x => x.Blocked);
         var area = requests.Clone();

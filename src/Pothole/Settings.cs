@@ -28,6 +28,7 @@ public sealed class Settings
     public bool StartServerOnLaunch { get; set; } = true;
     public bool StartWithWindows { get; set; }
     public bool CloseToTray { get; set; } = true;
+    public ChartSpan ChartSpan { get; set; } = ChartSpan.Hour;
 
     static readonly JsonSerializerOptions Json = new() { WriteIndented = true };
     static string FilePath => Path.Combine(App.DataDir, "settings.json");
