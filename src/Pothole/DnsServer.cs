@@ -35,15 +35,17 @@ public sealed class DnsServer(Filter filter, Stats stats)
     {
         if (Running) return null;
         _cts = new();
-        _self = LocalAddresses().ToHashSet();
+        _self = LocalAddresses().Append(IPAddress.IPv6Loopback).ToHashSet();
         // Windows' Internet Connection Sharing often holds 0.0.0.0:53, but each address can still be bound on its own.
-        var addrs = TryBind(IPAddress.Any) ? [IPAddress.Any] : LocalAddresses().Where(TryBind).ToList();
+        List<IPAddress> addrs = TryBind(IPAddress.Any) ? [IPAddress.Any] : LocalAddresses().Where(TryBind).ToList();
         if (_udp.Count == 0)
         {
             Stop();
             return "Port 53 is in use by another program, so Pothole can't listen for DNS requests. " +
                    "Close other DNS servers (another Pothole, Technitium, Pi-hole for Windows) and try again.";
         }
+        // ::1 too, so Windows' IPv6 DNS setting can point at Pothole (the "Use on this PC" switch sets both)
+        if (TryBind(IPAddress.IPv6Loopback)) addrs.Add(IPAddress.IPv6Loopback);
         Listening.Clear();
         Listening.AddRange(addrs);
         foreach (var s in _udp) _ = UdpLoop(s, _cts.Token);
@@ -73,7 +75,7 @@ public sealed class DnsServer(Filter filter, Stats stats)
 
     bool TryBind(IPAddress addr)
     {
-        var s = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        var s = new Socket(addr.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
         try
         {
             s.ExclusiveAddressUse = true;
@@ -90,7 +92,7 @@ public sealed class DnsServer(Filter filter, Stats stats)
     async Task UdpLoop(Socket s, CancellationToken ct)
     {
         var buf = new byte[4096];
-        EndPoint any = new IPEndPoint(IPAddress.Any, 0);
+        EndPoint any = new IPEndPoint(s.AddressFamily == AddressFamily.InterNetworkV6 ? IPAddress.IPv6Any : IPAddress.Any, 0);
         while (!ct.IsCancellationRequested)
         {
             SocketReceiveFromResult r;

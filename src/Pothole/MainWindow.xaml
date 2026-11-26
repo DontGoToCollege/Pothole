@@ -32,8 +32,12 @@
                     </StackPanel>
                     <TextBlock x:Name="StatusDetail" Style="{StaticResource Hint}" Margin="0,4,0,0"/>
                 </StackPanel>
-                <CheckBox x:Name="PauseBox" Grid.Column="2" Content="Pause blocking" VerticalAlignment="Center" Margin="0,0,18,0"
+                <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,18,0">
+                    <CheckBox x:Name="UsePcBox" Content="Use on this PC" Margin="0,0,0,6" Click="UsePcBox_Click"
+                              ToolTip="Point this PC's own DNS setting at Pothole, so its ads are blocked too. Windows asks for permission each time."/>
+                    <CheckBox x:Name="PauseBox" Content="Pause blocking"
                           ToolTip="Let everything through for a while without stopping the server" Click="PauseBox_Click"/>
+                </StackPanel>
                 <Button x:Name="StartStopButton" Grid.Column="3" Style="{StaticResource BigButton}" MinWidth="130" Click="StartStop_Click"/>
             </Grid>
         </Border>

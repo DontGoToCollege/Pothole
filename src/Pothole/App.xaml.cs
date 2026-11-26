@@ -67,7 +67,7 @@ public partial class App : Application
         Log($"Pothole {typeof(App).Assembly.GetName().Version} started, data in {DataDir}");
 
         ListenForSignal("Pothole.Show", ShowWindow);
-        ListenForSignal("Pothole.Exit", ExitApp);
+        ListenForSignal("Pothole.Exit", () => ExitApp(ask: false)); // scripted exit (updates) must not wait on a question
         CreateTray();
 
         if (Settings.StartServerOnLaunch) StartServer();
@@ -198,9 +198,17 @@ public partial class App : Application
         _window.Activate();
     }
 
-    public void ExitApp()
+    public void ExitApp(bool ask = true)
     {
         if (_exiting) return;
+        // Without Pothole this PC couldn't look anything up, so offer to put its DNS back first.
+        if (ask && !TestMode && PcDns.IsOn() && MessageBox.Show(
+                "This PC is using Pothole for DNS. Put its DNS setting back to how it was before Pothole, so the internet keeps working after Pothole closes?",
+                "Pothole", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+        {
+            var err = PcDns.Set(false).GetAwaiter().GetResult();
+            if (err != null) MessageBox.Show(err + " Set DNS back to automatic in Windows' network settings.", "Pothole");
+        }
         _exiting = true;
         Server.Stop();
         Stats.Save();

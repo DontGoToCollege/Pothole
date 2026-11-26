@@ -14,9 +14,11 @@ Get `Pothole.exe` from the [Releases page](https://github.com/DontGoToCollege/Po
 2. The top of the window shows this PC's address, for example `192.168.1.20`.
 3. Point a device at it: in the device's Wi-Fi or network settings, set the **DNS server** to that address.
 4. To cover every device at home at once, log in to your router and set its DNS server to that address.
-5. For the PC Pothole runs on, set its DNS server to `127.0.0.1`.
+5. For the PC Pothole runs on, tick **Use on this PC** at the top. Windows asks for permission; unticking it puts your old setting back.
 
 Keep the PC on and Pothole running, or those devices won't be able to look up sites. If something stops working, press **Stop** and set DNS back to automatic.
+
+If your router also hands out IPv6 DNS servers, some devices may use those and skip Pothole. If ads still get through on a device, look for an IPv6 DNS setting in your router and point it at the PC too, or turn it off.
 
 ## What's in the window
 

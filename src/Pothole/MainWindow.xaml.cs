@@ -42,18 +42,22 @@ public partial class MainWindow : Window
         StatusText.Text = !running ? "Stopped" : paused ? "Running · blocking paused" : "Running";
         StatusPill.Background = (Brush)FindResource(!running ? "Muted" : paused ? "Warn" : "Good");
         PauseBox.IsChecked = paused;
+        bool usePc = PcDns.IsOn();
+        if (UsePcBox.IsEnabled) UsePcBox.IsChecked = usePc;
 
         var lan = LanAddresses();
         var ip = lan.FirstOrDefault() ?? "this PC's address";
         StatusDetail.Text = running
             ? $"Devices are protected when their DNS server is set to {string.Join(" or ", lan.DefaultIfEmpty("this PC's address"))}."
-            : App.Status != "Stopped" ? App.Status : "Press Start to begin blocking ads and trackers.";
-        StatusDetail.Foreground = (Brush)FindResource(running || App.Status == "Stopped" ? "Muted" : "Bad");
+            : App.Status != "Stopped" ? App.Status
+            : usePc ? "This PC can't look up sites while Pothole is stopped. Press Start, or untick \"Use on this PC\"."
+            : "Press Start to begin blocking ads and trackers.";
+        StatusDetail.Foreground = (Brush)FindResource(running || App.Status == "Stopped" && !usePc ? "Muted" : "Bad");
         HowTo.Text =
             $"1. Press Start. Pothole now answers DNS requests (the lookups that turn site names into addresses) on this PC.\n" +
             $"2. Point a device at it: in the device's Wi-Fi or network settings, set the DNS server to {ip}.\n" +
             $"3. To cover every device at home at once, log in to your router and set its DNS server to {ip}.\n" +
-            $"4. For this PC itself, set its DNS server to 127.0.0.1.\n" +
+            $"4. For this PC itself, tick \"Use on this PC\" at the top (Windows asks for permission).\n" +
             $"Keep this PC on and Pothole running, or those devices can't look up sites. If something breaks, press Stop and set DNS back to automatic.";
 
         ListsStatus.Text = App.ListsLoading ? "Downloading and loading lists…" : $"{App.Filter.ListCount:N0} unique sites blocked by your lists";
@@ -108,6 +112,23 @@ public partial class MainWindow : Window
     }
 
     void PauseBox_Click(object sender, RoutedEventArgs e) => App.SetBlocking(PauseBox.IsChecked != true);
+
+    async void UsePcBox_Click(object sender, RoutedEventArgs e)
+    {
+        bool on = UsePcBox.IsChecked == true;
+        if (on && !App.Server.Running) App.StartServer();
+        if (on && !App.Settings.StartWithWindows)
+        {
+            // After a restart this PC would have no DNS at all unless Pothole comes back with it.
+            App.SetStartWithWindows(true);
+            StartWithWindowsBox.IsChecked = true;
+        }
+        UsePcBox.IsEnabled = false;
+        var err = await PcDns.Set(on);
+        UsePcBox.IsEnabled = true;
+        if (err != null) MessageBox.Show(this, err, "Pothole");
+        OnChanged();
+    }
 
     void ResetStats_Click(object sender, RoutedEventArgs e)
     {
